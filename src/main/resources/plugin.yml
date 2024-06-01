@@ -1,0 +1,4 @@
+name: EpicKits
+version: '${project.version}'
+main: it.geusa.epickits.EpicKits
+api-version: '1.20'
