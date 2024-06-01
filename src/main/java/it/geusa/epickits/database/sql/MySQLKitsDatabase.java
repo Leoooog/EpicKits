@@ -1,33 +1,53 @@
-package it.geusa.epickits.database;
+package it.geusa.epickits.database.sql;
+
+import it.geusa.epickits.database.IKitsDatabase;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
 public class MySQLKitsDatabase extends SQLKitsDatabase {
-    private final String url;
+    private final String host;
+    private final int port;
+    private final String database;
     private final String username;
     private final String password;
 
-    public MySQLKitsDatabase(String url, String username, String password) {
-        this.url = url;
+    private final boolean useSSL;
+
+    private final boolean verifyServerCertificate;
+
+    private final boolean requireSSL;
+
+    public MySQLKitsDatabase(String host, int port, String database, String username, String password, boolean useSSL, boolean verifyServerCertificate, boolean requireSSL) {
+        super();
+        this.host = host;
+        this.port = port;
+        this.database = database;
         this.username = username;
         this.password = password;
+        this.useSSL = useSSL;
+        this.verifyServerCertificate = verifyServerCertificate;
+        this.requireSSL = requireSSL;
     }
 
     @Override
-    public TYPE getType() {
-        return TYPE.MYSQL;
+    public IKitsDatabase.TYPE getType() {
+        return IKitsDatabase.TYPE.MYSQL;
     }
-
-    @Override
-    public void save(boolean async) {
-        // There is no need to save the data to the MySQL database
-    }
-
     @Override
     protected void openConnection() throws SQLException {
         if (connection == null || connection.isClosed()) {
-            connection = DriverManager.getConnection(url, username, password);
+            String url = "jdbc:mysql://" + host + ":" + port + "/" + database;
+            Properties properties = new Properties();
+            properties.setProperty("user", username);
+            properties.setProperty("password", password);
+            if (useSSL) {
+                properties.setProperty("useSSL", "true");
+                properties.setProperty("verifyServerCertificate", Boolean.toString(verifyServerCertificate));
+                properties.setProperty("requireSSL", Boolean.toString(requireSSL));
+            }
+            connection = DriverManager.getConnection(url, properties);
         }
     }
 

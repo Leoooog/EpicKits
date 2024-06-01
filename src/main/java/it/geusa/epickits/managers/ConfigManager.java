@@ -1,4 +1,4 @@
-package it.geusa.epickits.config;
+package it.geusa.epickits.managers;
 
 import it.geusa.epickits.EpicKits;
 import it.geusa.epickits.database.IKitsDatabase;
@@ -100,5 +100,25 @@ public class ConfigManager {
 
     public int secondsToConfirmCommand() {
         return plugin.getConfig().getInt("seconds-to-confirm-command");
+    }
+
+    public String kitPermission() {
+        return plugin.getConfig().getString("kit-permission");
+    }
+
+    public boolean overrideIconName() {
+        return plugin.getConfig().getBoolean("override-icon-name");
+    }
+
+    public boolean overrideIconLore() {
+        return plugin.getConfig().getBoolean("override-icon-lore");
+    }
+
+    public int getKitsInventorySize() {
+        return plugin.getConfig().getInt("kits-inventory-size");
+    }
+
+    public boolean stackItems() {
+        return plugin.getConfig().getBoolean("stack-items");
     }
 }

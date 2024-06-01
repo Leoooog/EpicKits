@@ -1,40 +1,30 @@
-package it.geusa.epickits.database;
+package it.geusa.epickits.database.sql;
 
-import it.geusa.epickits.EpicKits;
-import it.geusa.epickits.models.Kit;
+import it.geusa.epickits.database.IKitsDatabase;
 
 import java.io.File;
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.logging.Logger;
 
 public class SQLiteKitsDatabase extends SQLKitsDatabase {
 
     private final File kitsFile;
 
-    private final String fileName;
-
     public SQLiteKitsDatabase(File kitsFile) {
         super();
         this.kitsFile = kitsFile;
-        this.fileName = kitsFile.getName();
     }
 
 
     @Override
-    public TYPE getType() {
-        return TYPE.SQLITE;
-    }
-
-    @Override
-    public void save(boolean async) throws Exception {
-        
+    public IKitsDatabase.TYPE getType() {
+        return IKitsDatabase.TYPE.SQLITE;
     }
 
     @Override
     protected void openConnection() throws SQLException {
-
+        if (connection == null || connection.isClosed()) {
+            connection = DriverManager.getConnection("jdbc:sqlite:" + kitsFile.getAbsolutePath());
+        }
     }
 }

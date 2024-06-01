@@ -2,3 +2,19 @@ name: EpicKits
 version: '${project.version}'
 main: it.geusa.epickits.EpicKits
 api-version: '1.20'
+depend:
+  - Vault
+commands:
+  epickits:
+    description: EpicKits main command
+    usage: /epickits
+    aliases: [ ek, ekits ]
+    permission: epickits.use
+  kit:
+    description: Kit command
+    usage: /kit
+    permission: epickits.kit
+  kits:
+    description: Kits command
+    usage: /kits
+    permission: epickits.kits

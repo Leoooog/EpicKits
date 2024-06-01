@@ -1,5 +1,10 @@
-package it.geusa.epickits.inventories;
+package it.geusa.epickits.inventories.utils;
 
+import it.geusa.epickits.EpicKits;
+import it.geusa.epickits.managers.ConfigManager;
+import it.geusa.epickits.managers.InventoryManager;
+import it.geusa.epickits.managers.KitManager;
+import it.geusa.epickits.managers.KitPlayerManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -11,19 +16,34 @@ import java.util.Map;
 
 public abstract class EKInventory implements InventoryHandler {
 
-    private final Inventory inventory;
+    protected final EpicKits plugin = EpicKits.getInstance();
 
+    protected final ConfigManager configManager = plugin.getConfigManager();
+    protected final InventoryManager inventoryManager = plugin.getInventoryManager();
+
+    protected final KitManager kitManager = plugin.getKitManager();
+
+    protected final KitPlayerManager kitPlayerManager = plugin.getKitPlayerManager();
+
+    private Inventory inventory;
     private final Map<Integer, InventoryButton> buttons = new HashMap<>();
-
     private final boolean cancelClicks;
 
-    public EKInventory(boolean cancelClicks) {
+    protected final Player player;
+
+    public EKInventory(Player player, boolean cancelClicks) {
         this.cancelClicks = cancelClicks;
-        this.inventory = createInventory();
+        this.player = player;
     }
 
     public Inventory getInventory() {
+        if (inventory == null)
+            inventory = createInventory();
         return inventory;
+    }
+
+    public Player getPlayer() {
+        return player;
     }
 
     public void addButton(int slot, InventoryButton button) {
@@ -38,14 +58,26 @@ public abstract class EKInventory implements InventoryHandler {
         return buttons.get(slot);
     }
 
-    public void decorate(Player player) {
+    public void decorate() {
         buttons.forEach((slot, button) -> inventory.setItem(slot, button.getIconCreator().apply(player)));
+        player.updateInventory();
+    }
+
+    public void decorateSlot(int slot) {
+        InventoryButton button = buttons.get(slot);
+        if (button != null) {
+            inventory.setItem(slot, button.getIconCreator().apply(player));
+        }
+        else {
+            inventory.setItem(slot, null);
+        }
+        player.updateInventory();
     }
 
     @Override
     public void onClick(InventoryClickEvent event) {
         event.setCancelled(cancelClicks);
-        int slot = event.getSlot();
+        int slot = event.getRawSlot();
         InventoryButton button = buttons.get(slot);
         if (button != null) {
             event.setCancelled(true);
@@ -55,7 +87,7 @@ public abstract class EKInventory implements InventoryHandler {
 
     @Override
     public void onOpen(InventoryOpenEvent event) {
-        decorate((Player) event.getPlayer());
+        decorate();
     }
 
     @Override
@@ -64,4 +96,5 @@ public abstract class EKInventory implements InventoryHandler {
     }
 
     protected abstract Inventory createInventory();
+
 }

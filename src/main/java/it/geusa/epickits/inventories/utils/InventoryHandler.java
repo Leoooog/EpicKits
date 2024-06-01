@@ -1,4 +1,4 @@
-package it.geusa.epickits.inventories;
+package it.geusa.epickits.inventories.utils;
 
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;

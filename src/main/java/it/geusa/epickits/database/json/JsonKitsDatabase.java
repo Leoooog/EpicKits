@@ -1,4 +1,4 @@
-package it.geusa.epickits.database;
+package it.geusa.epickits.database.json;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import it.geusa.epickits.EpicKits;
+import it.geusa.epickits.database.IKitsDatabase;
 import it.geusa.epickits.models.Kit;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -14,6 +15,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -22,9 +24,11 @@ public class JsonKitsDatabase implements IKitsDatabase {
     private final File kitsFile;
 
     private final String fileName;
-    private final Logger logger = EpicKits.getInstance().getLogger();
 
-    private final Gson gson = EpicKits.getGson();
+    private final EpicKits plugin = EpicKits.getInstance();
+    private final Logger logger = plugin.getLogger();
+
+    private final Gson gson = plugin.getGson();
     private JsonReader reader;
     private JsonWriter writer;
 
@@ -101,7 +105,7 @@ public class JsonKitsDatabase implements IKitsDatabase {
     }
 
     @Override
-    public boolean createKit(Kit kit) throws Exception {
+    public boolean createKit(Kit kit) {
         if (getKit(kit.getId()) == null) {
             JsonElement jsonElement = gson.toJsonTree(kit, ConfigurationSerializable.class);
             JsonArray kits = gson.fromJson(reader, JsonArray.class);
@@ -113,7 +117,7 @@ public class JsonKitsDatabase implements IKitsDatabase {
     }
 
     @Override
-    public boolean deleteKit(String id) throws Exception {
+    public boolean deleteKit(String id) {
         JsonArray kits = gson.fromJson(reader, JsonArray.class);
         for (JsonElement kit : kits) {
             if (kit.getAsJsonObject().get("id").getAsString().equals(id)) {
@@ -126,7 +130,7 @@ public class JsonKitsDatabase implements IKitsDatabase {
     }
 
     @Override
-    public Kit getKit(String id) throws Exception {
+    public Kit getKit(String id) {
         JsonArray kits = gson.fromJson(reader, JsonArray.class);
         for (JsonElement kit : kits) {
             if (kit.getAsJsonObject().get("id").getAsString().equals(id)) {
@@ -137,7 +141,7 @@ public class JsonKitsDatabase implements IKitsDatabase {
     }
 
     @Override
-    public List<Kit> getKits() throws Exception {
+    public List<Kit> getKits() {
         JsonArray kits = gson.fromJson(reader, JsonArray.class);
         if (kits != null) {
             Kit[] kitArray = (Kit[]) gson.fromJson(kits, ConfigurationSerializable[].class);
@@ -147,8 +151,9 @@ public class JsonKitsDatabase implements IKitsDatabase {
     }
 
     @Override
-    public boolean editKit(Kit kit) throws Exception {
+    public boolean editKit(Kit kit) {
         if (deleteKit(kit.getId())) {
+            kit.setLastModified(new Date());
             createKit(kit);
             return true;
         }

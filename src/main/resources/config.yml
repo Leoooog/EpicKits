@@ -1,0 +1,35 @@
+# Choose between "yaml", "json", "mysql", "sqlite"
+storage-type: "yaml"
+storage:
+  save-async: true
+  yaml:
+    file-name: "kits.yml"
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "database"
+    username: "username"
+    password: "password"
+    use-ssl: false
+    verify-server-certificate: true
+    require-ssl: false
+  sqlite:
+    file-name: "kits.db"
+  json:
+    file-name: "kits.json"
+
+
+# No need for SQL database types, as changes are saved directly to the database
+auto-update: false
+save-on-disable: true
+
+seconds-to-confirm-command: 10
+kit-permission: "epickits.kit.<kit-name>"
+
+# Kits inventory size (9, 18, 27, 36, 45, 54)
+# Set to 0 to adjust to the amount of kits available to each player
+kits-inventory-size: 0
+override-icon-name: true
+override-icon-lore: true
+# Set to false if you don't want to stack items when a player receives a kit if items in kit are not stacked but stackable
+stack-items: false

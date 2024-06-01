@@ -1,12 +1,13 @@
-package it.geusa.epickits.database;
+package it.geusa.epickits.managers;
 
 import it.geusa.epickits.EpicKits;
-import it.geusa.epickits.config.ConfigManager;
+import it.geusa.epickits.database.IKitsDatabase;
 import it.geusa.epickits.database.json.JsonKitsDatabase;
 import it.geusa.epickits.database.sql.MySQLKitsDatabase;
 import it.geusa.epickits.database.sql.SQLiteKitsDatabase;
 import it.geusa.epickits.database.yaml.YamlKitsDatabase;
 import it.geusa.epickits.models.Kit;
+import org.bukkit.Bukkit;
 
 import java.io.File;
 import java.util.List;
@@ -66,7 +67,8 @@ public class KitManager {
         try {
             database.load();
             kits = database.getKits();
-            logger.info("The kits have been loaded successfully");
+            int size = kits.size();
+            logger.info(size + " kit" + (size == 1 ? "" : "s") + " loaded successfully");
         } catch (Exception e) {
             logger.severe("An error occurred while loading the kits");
             e.printStackTrace();
@@ -75,7 +77,13 @@ public class KitManager {
 
     public boolean save() {
         try {
-            database.save(asyncSaving);
+            if (!Bukkit.getPluginManager().isPluginEnabled(plugin)) {
+                logger.warning("The plugin is being disabled, the kits will be saved synchronously");
+                database.save(false);
+            }
+            else {
+                database.save(asyncSaving);
+            }
         } catch (Exception e) {
             logger.severe("An error occurred while saving the kits");
             e.printStackTrace();
@@ -87,8 +95,8 @@ public class KitManager {
     }
 
     public boolean createKit(Kit kit) {
-        if (!validateKit(kit)) {
-            logger.severe("The kit is not valid");
+        if (!validateKitForCreation(kit)) {
+            logger.severe("The kit is not valid for creation");
             return false;
         }
         try {
@@ -129,6 +137,10 @@ public class KitManager {
 
     public boolean editKit(Kit kit) {
         try {
+            if (!validateKitForEdit(kit)) {
+                logger.severe("The kit is not valid for editing");
+                return false;
+            }
             return database.editKit(kit);
         } catch (Exception e) {
             logger.severe("An error occurred while editing the kit");
@@ -158,15 +170,23 @@ public class KitManager {
         return kits;
     }
 
-    private boolean validateKit(Kit kit) {
+    private boolean validateKitForCreation(Kit kit) {
         // Check for unique values: id, permission
         return kits.stream()
-                .noneMatch(k -> k.getId().equals(kit.getId()) || k.getPermission().equals(kit.getPermission()));
+                .noneMatch(k -> k.getId().equals(kit.getId()) || k.getPermission().equals(kit.getPermission()))
+                && kit.isValid();
+    }
+
+    private boolean validateKitForEdit(Kit kit) {
+        // Check for unique value: permission
+        return kits.stream().filter(k -> k != kit)
+                .noneMatch(k -> k.getPermission().equals(kit.getPermission()))
+                && kit.isValid();
     }
 
     public boolean isDirty() {
         return database.getType() != IKitsDatabase.TYPE.SQLITE && database.getType() != IKitsDatabase.TYPE.MYSQL
                 && !configManager.autoUpdate() && dirty;
     }
-    
+
 }

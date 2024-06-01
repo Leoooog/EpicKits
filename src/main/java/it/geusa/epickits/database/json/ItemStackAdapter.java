@@ -1,4 +1,4 @@
-package it.geusa.epickits.database;
+package it.geusa.epickits.database.json;
 
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
@@ -13,14 +13,16 @@ import java.util.Map;
 
 public class ItemStackAdapter implements JsonSerializer<ItemStack>, JsonDeserializer<ItemStack> {
 
+    private final Gson gson = EpicKits.getInstance().getGson();
+
     @Override
     public ItemStack deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-        Map<String, Object> map = EpicKits.getGson().fromJson(json, TypeToken.get(Map.class).getType());
+        Map<String, Object> map = gson.fromJson(json, TypeToken.get(Map.class).getType());
         map.putIfAbsent("v", Bukkit.getUnsafe().getDataVersion());
 
         if (map.containsKey("meta")) {
             Map<String, Object> meta = (Map<String, Object>) map.get("meta");
-            ConfigurationSerializable deserializedMeta = context.deserialize(EpicKits.getGson().toJsonTree(meta),
+            ConfigurationSerializable deserializedMeta = context.deserialize(gson.toJsonTree(meta),
                     ConfigurationSerializable.class);
             map.remove("meta");
             ItemStack is = ItemStack.deserialize(map);
@@ -40,7 +42,7 @@ public class ItemStackAdapter implements JsonSerializer<ItemStack>, JsonDeserial
             JsonElement meta = context.serialize(src.getItemMeta(), ConfigurationSerializable.class);
             map.put("meta", meta.getAsJsonObject());
         }
-        return EpicKits.getGson().toJsonTree(map);
+        return gson.toJsonTree(map);
     }
 
 }

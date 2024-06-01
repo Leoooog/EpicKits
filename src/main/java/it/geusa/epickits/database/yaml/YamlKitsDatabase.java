@@ -1,6 +1,7 @@
-package it.geusa.epickits.database;
+package it.geusa.epickits.database.yaml;
 
 import it.geusa.epickits.EpicKits;
+import it.geusa.epickits.database.IKitsDatabase;
 import it.geusa.epickits.models.Kit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -11,6 +12,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -129,6 +131,7 @@ public class YamlKitsDatabase implements IKitsDatabase {
     @Override
     public boolean editKit(Kit kit) {
         if (getKit(kit.getId()) != null) {
+            kit.setLastModified(new Date());
             String sectionKey = "kits." + kit.getId();
             kitsConfig.set(sectionKey, kit);
             return true;

@@ -1,5 +1,7 @@
-package it.geusa.epickits.database;
+package it.geusa.epickits.database.sql;
 
+import it.geusa.epickits.Utils;
+import it.geusa.epickits.database.IKitsDatabase;
 import it.geusa.epickits.models.Kit;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,7 +27,6 @@ public abstract class SQLKitsDatabase implements IKitsDatabase {
         columns.put("description", "text");
         columns.put("cooldown", "int");
         columns.put("oneTime", "tinyint(1)");
-        columns.put("free", "tinyint(1)");
         columns.put("cost", "double");
         columns.put("enabled", "tinyint(1)");
         columns.put("clearInventory", "tinyint(1)");
@@ -34,11 +35,17 @@ public abstract class SQLKitsDatabase implements IKitsDatabase {
         columns.put("autoShield", "tinyint(1)");
         columns.put("autoElytra", "tinyint(1)");
         columns.put("items", "text");
+        columns.put("icon", "text");
         columns.put("lastModified", "timestamp");
         return columns;
     }
 
     protected abstract void openConnection() throws SQLException;
+
+    @Override
+    public void save(boolean async) {
+        // There is no need to save the data to the SQL database
+    }
 
     @Override
     public void load() throws SQLException {
@@ -94,10 +101,10 @@ public abstract class SQLKitsDatabase implements IKitsDatabase {
 
     @Override
     public void reload() throws SQLException {
-        logger.info("Reloading the "+getType()+" database connection...");
+        logger.info("Reloading the " + getType() + " database connection...");
         close();
         load();
-        logger.info("The "+getType()+" database connection has been reloaded successfully");
+        logger.info("The " + getType() + " database connection has been reloaded successfully");
     }
 
     @Override
@@ -106,30 +113,30 @@ public abstract class SQLKitsDatabase implements IKitsDatabase {
             connection.close();
         }
         connection = null;
-        logger.info("The connection to the "+getType()+" database has been closed");
+        logger.info("The connection to the " + getType() + " database has been closed");
     }
 
     @Override
     public boolean createKit(Kit kit) throws SQLException {
         PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO kits (id, displayName, permission, description, cooldown, oneTime, free, cost, enabled, "
-                        + "clearInventory, clearArmor, autoArmor, autoShield, autoElytra, items, lastModified) VALUES"
-                        + " (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                "INSERT INTO kits (id, displayName, permission, description, cooldown, oneTime, cost, enabled, "
+                        + "clearInventory, clearArmor, autoArmor, autoShield, autoElytra, items, icon, lastModified) "
+                        + "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
         statement.setString(1, kit.getId());
         statement.setString(2, kit.getDisplayName());
         statement.setString(3, kit.getPermission());
         statement.setString(4, kit.getDescription());
         statement.setInt(5, kit.getCooldown());
         statement.setBoolean(6, kit.isOneTime());
-        statement.setBoolean(7, kit.isFree());
-        statement.setDouble(8, kit.getCost());
-        statement.setBoolean(9, kit.isEnabled());
-        statement.setBoolean(10, kit.isClearInventory());
-        statement.setBoolean(11, kit.isClearArmor());
-        statement.setBoolean(12, kit.isAutoArmor());
-        statement.setBoolean(13, kit.isAutoShield());
-        statement.setBoolean(14, kit.isAutoElytra());
-        statement.setString(15, kit.getItems().toString());
+        statement.setDouble(7, kit.getCost());
+        statement.setBoolean(8, kit.isEnabled());
+        statement.setBoolean(9, kit.isClearInventory());
+        statement.setBoolean(10, kit.isClearArmor());
+        statement.setBoolean(11, kit.isAutoArmor());
+        statement.setBoolean(12, kit.isAutoShield());
+        statement.setBoolean(13, kit.isAutoElytra());
+        statement.setString(14, kit.getSerializedItems());
+        statement.setString(15, kit.getSerializedIcon());
         statement.setTimestamp(16, new Timestamp(System.currentTimeMillis()));
         return statement.executeUpdate() > 0;
     }
@@ -168,25 +175,26 @@ public abstract class SQLKitsDatabase implements IKitsDatabase {
         PreparedStatement statement = connection.prepareStatement(
                 "UPDATE kits SET displayName = ?, permission = ?, description = ?, cooldown = ?, oneTime = ?, free = ?, "
                         + "cost = ?, enabled = ?, clearInventory = ?, clearArmor = ?, autoArmor = ?, autoShield = ?, "
-                        + "autoElytra = ?, items = ?, lastModified = ? WHERE id = ?");
+                        + "autoElytra = ?, items = ?, icon = ?, lastModified = ? WHERE id = ?");
         statement.setString(1, kit.getDisplayName());
         statement.setString(2, kit.getPermission());
         statement.setString(3, kit.getDescription());
         statement.setInt(4, kit.getCooldown());
         statement.setBoolean(5, kit.isOneTime());
-        statement.setBoolean(6, kit.isFree());
-        statement.setDouble(7, kit.getCost());
-        statement.setBoolean(8, kit.isEnabled());
-        statement.setBoolean(9, kit.isClearInventory());
-        statement.setBoolean(10, kit.isClearArmor());
-        statement.setBoolean(11, kit.isAutoArmor());
-        statement.setBoolean(12, kit.isAutoShield());
-        statement.setBoolean(13, kit.isAutoElytra());
-        statement.setString(14, kit.getSerializedItems());
-        statement.setTimestamp(15, new Timestamp(System.currentTimeMillis()));
-        statement.setString(16, kit.getId());
+        statement.setDouble(6, kit.getCost());
+        statement.setBoolean(7, kit.isEnabled());
+        statement.setBoolean(8, kit.isClearInventory());
+        statement.setBoolean(9, kit.isClearArmor());
+        statement.setBoolean(10, kit.isAutoArmor());
+        statement.setBoolean(11, kit.isAutoShield());
+        statement.setBoolean(12, kit.isAutoElytra());
+        statement.setString(13, kit.getSerializedItems());
+        statement.setString(14, kit.getSerializedIcon());
+        Timestamp lastModified = new Timestamp(System.currentTimeMillis());
+        statement.setTimestamp(15, lastModified);
+        statement.setString(15, kit.getId());
         if (statement.executeUpdate() > 0) {
-            kit.setLastModified(new java.util.Date());
+            kit.setLastModified(lastModified);
             return true;
         }
         return false;
@@ -199,7 +207,6 @@ public abstract class SQLKitsDatabase implements IKitsDatabase {
         String description = resultSet.getString("description");
         int cooldown = resultSet.getInt("cooldown");
         boolean oneTime = resultSet.getBoolean("oneTime");
-        boolean free = resultSet.getBoolean("free");
         double cost = resultSet.getDouble("cost");
         boolean enabled = resultSet.getBoolean("enabled");
         boolean clearInventory = resultSet.getBoolean("clearInventory");
@@ -208,8 +215,12 @@ public abstract class SQLKitsDatabase implements IKitsDatabase {
         boolean autoShield = resultSet.getBoolean("autoShield");
         boolean autoElytra = resultSet.getBoolean("autoElytra");
         String serializedItems = resultSet.getString("items");
+        String serializedIcon = resultSet.getString("icon");
         Date lastModified = resultSet.getTimestamp("lastModified");
-        return new Kit(id, displayName, permission, description, cooldown, oneTime, free, cost, enabled, clearInventory,
-                clearArmor, autoArmor, autoShield, autoElytra, Kit.deserializeItems(serializedItems), lastModified);
+        Kit kit = new Kit(id, displayName, permission, description, cooldown, oneTime, cost, enabled, clearInventory,
+                clearArmor, autoArmor, autoShield, autoElytra, Utils.deserializeItems(serializedItems),
+                Objects.requireNonNull(Utils.deserializeItemStack(serializedIcon)), lastModified);
+        if (kit.isValid()) return kit;
+        return null;
     }
 }

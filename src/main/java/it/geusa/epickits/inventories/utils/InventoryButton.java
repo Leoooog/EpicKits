@@ -1,9 +1,11 @@
-package it.geusa.epickits.inventories;
+package it.geusa.epickits.inventories.utils;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -18,27 +20,17 @@ public class InventoryButton {
         return new InventoryButton()
                 .creator(p -> {
                     ItemStack item = new ItemStack(Material.REDSTONE_BLOCK);
-                    item.getItemMeta().setDisplayName("§cClose");
+                    ItemMeta meta = item.getItemMeta();
+                    meta.setDisplayName("§cClose");
+                    item.setItemMeta(meta);
                     return item;
                 })
                 .consumer(event -> {
-                    event.getWhoClicked().closeInventory();
+                    event.getWhoClicked().closeInventory(InventoryCloseEvent.Reason.PLUGIN);
                 });
     }
 
-    public static InventoryButton saveButton() {
-        return new InventoryButton()
-                .creator(p -> {
-                    ItemStack item = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
-                    item.getItemMeta().setDisplayName("§aSave");
-                    return item;
-                })
-                .consumer(event -> {
-                    event.getWhoClicked().closeInventory();
-                });
-    }
-
-    public static InventoryButton infoButton(ItemStack item) {
+    public static InventoryButton emptyButton(ItemStack item) {
         return new InventoryButton()
                 .creator(p -> item)
                 .consumer(event -> {
@@ -59,8 +51,10 @@ public class InventoryButton {
     private static ItemStack booleanItemStack(String displayName, boolean value) {
         ItemStack item = new ItemStack(
                 value ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE);
-        item.getItemMeta().setDisplayName(displayName);
-        item.getItemMeta().setLore(value ? List.of("§aTrue") : List.of("§cFalse"));
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(displayName);
+        meta.setLore(value ? List.of("§aTrue") : List.of("§cFalse"));
+        item.setItemMeta(meta);
         return item;
     }
 
