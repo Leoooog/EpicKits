@@ -159,7 +159,7 @@ public class EditKitInventory extends EKInventory {
 
     @Override
     public void onClick(InventoryClickEvent event) {
-        super.onClick(event);
+        /*super.onClick(event);
         int slot = event.getRawSlot();
         if (slot < 36) {
             if (getButton(slot) != null) {
@@ -179,7 +179,13 @@ public class EditKitInventory extends EKInventory {
                 }
                 event.setCancelled(true);
             }
-        }
+        }*/
+       int slot = event.getRawSlot();
+       if(slot > 55) {
+        ItemStack item = event.getCurrentItem();
+        if(item.getType() == Material.AIR) return;
+        
+       }
     }
 
     protected void save() {
